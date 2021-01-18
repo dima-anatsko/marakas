@@ -41,9 +41,17 @@ def wrong_option(*args, **kwargs):
 @click.command()
 @click.argument('file', type=click.File('r'))
 @click.option('-p', '--products', 'table_name', flag_value='products',
-              default=True)
-@click.option('-r', '--reviews', 'table_name', flag_value='reviews')
-def main(table_name, file):
+              help='Set this option if you import in table products')
+@click.option('-r', '--reviews', 'table_name', flag_value='reviews',
+              help='Set this option if you import in table reviews')
+def cli(table_name, file):
+    """
+    Script for importing data from a csv file to a database
+
+    :param table_name: this parameter points which table to import to data
+    :param file: this parameter points path to the file
+    :return: was the operation successful
+    """
     choice_table = {'products': insert_products, 'reviews': insert_reviews}
     connection = psycopg2.connect(**SETTING_DB)
     cursor = connection.cursor()
@@ -55,4 +63,4 @@ def main(table_name, file):
 
 
 if __name__ == "__main__":
-    main()
+    cli()
