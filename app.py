@@ -1,14 +1,12 @@
 import psycopg2
 from flask import Flask, jsonify, request
 from flask_caching import Cache
+import parser
+
 
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
-connection = psycopg2.connect(user="postgres",
-                              password="postgres",
-                              host="127.0.0.1",
-                              port="5432",
-                              database="marakas")
+connection = psycopg2.connect(**parser.SETTING_DB)
 cursor = connection.cursor()
 
 

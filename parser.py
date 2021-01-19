@@ -13,6 +13,21 @@ SETTING_DB = {
 }
 
 
+def create_database(cursor):
+    create_table_products = '''CREATE TABLE products
+        (id            SERIAL           PRIMARY KEY,
+         title         VARCHAR(255)     NOT NULL,
+         asin          VARCHAR(50)      NOT NULL UNIQUE); '''
+    cursor.execute(create_table_products)
+    create_table_reviews = '''CREATE TABLE reviews
+        (id            SERIAL       PRIMARY KEY,
+         product_id    INTEGER,
+         title         VARCHAR(255) NOT NULL,
+         review        TEXT         NOT NULL,
+         FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE);'''
+    cursor.execute(create_table_reviews)
+
+
 def insert_products(file, cursor):
     insert_query = 'INSERT INTO products (title, asin) VALUES (%s, %s)'
     reader = csv.DictReader(file)
@@ -41,20 +56,27 @@ def wrong_option(*args, **kwargs):
 @click.command()
 @click.argument('file', type=click.File('r'))
 @click.option('-p', '--products', 'table_name', flag_value='products',
-              help='Set this option if you import in table products')
+              help='Set this option if you import in table "products"')
 @click.option('-r', '--reviews', 'table_name', flag_value='reviews',
-              help='Set this option if you import in table reviews')
-def cli(table_name, file):
+              help='Set this option if you import in table "reviews"')
+@click.option('-c/-n', '--create/--no-create', 'create_db', default=False,
+              help="Choice '-c' if you want to create tables in the database")
+def cli(table_name, file, create_db):
     """
     Script for importing data from a csv file to a database
 
     :param table_name: this parameter points which table to import to data
     :param file: this parameter points path to the file
+    :param create_db: this parameter points path to the file
     :return: was the operation successful
     """
     choice_table = {'products': insert_products, 'reviews': insert_reviews}
     connection = psycopg2.connect(**SETTING_DB)
     cursor = connection.cursor()
+    if create_db:
+        create_database(cursor)
+        connection.commit()
+        click.echo('The database was created successfully')
     report = choice_table.get(table_name, wrong_option)(file, cursor)
     connection.commit()
     cursor.close()
