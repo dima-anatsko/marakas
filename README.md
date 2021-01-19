@@ -1,6 +1,6 @@
 ## Python developer test task (Flask)
 
-####Task:
+**Task**:
 
 You need to write a web application in which:
    1. Parse two 2 files (Products.csv (columns: Title,Asin), Reviews.csv ( columns: Asin,Title,Review)), save data to the database (to use Postgresql, one-to-many or many-to-many relationships to choose from). Parsing and saving to the database can be implemented using the console command.
@@ -9,7 +9,7 @@ You need to write a web application in which:
         It is advisable to create caching for GET endpoint.
    3. Create a second endpoint API (PUT), which will write a new Review for the product to the database (by id).
 
-####Project description
+**Project description**
 
 The project is written in python 3.9  
 To start the project, copy:
