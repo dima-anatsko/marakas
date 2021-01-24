@@ -16,7 +16,7 @@ To start the project, copy:
 
 `git clone https://github.com/dima-anatsko/marakas.git`
 
-Go to your virtual environment and install the dependencies:
+Go to your virtual environment and install the requirements:
 
 `pip install -r requirements.txt`
 
@@ -43,12 +43,19 @@ Examples of queries:
   
 * 9 - this is the product id
 * page - overview page
-* offset - number of reviews per page
+* offset - number of reviews on page
 
-        curl PUT 'http://127.0.0.1:5000/marakas/api/v1.0/products'
+In response, you will receive a product with a list of reviews.
+
+To add a new review, you need to send the following request:
+
+        curl PUT 'http://127.0.0.1:5000/marakas/api/v1.0/products/2'
         --header 'Content-Type: application/json'
         --data-raw '{
-            "id": "2",
             "title": "amazing toys",
             "review": "Most inconsiderate, I must say."
         }'
+
+To get a list of all products, send the following request:
+
+`curl GET 'http://127.0.0.1:5000/marakas/api/v1.0/products/'`

@@ -9,20 +9,28 @@ cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 connection = psycopg2.connect(**parser.SETTING_DB)
 cursor = connection.cursor()
 
-
-PRODUCT_QUERY = """
+PRODUCT_VIEWS_QUERY = """
 SELECT products.id, products.title, asin, reviews.title, review
 FROM products
 LEFT JOIN reviews ON products.id = reviews.product_id
 WHERE products.id = %s
 ORDER BY reviews.title"""
 
+PRODUCTS_QUERY = "SELECT id, title, asin FROM products"
+
 INSERT_REVIEW = """INSERT INTO reviews (product_id, title, review) 
 VALUES (%s, %s, %s);"""
 
+GET_ID_PRODUCT = "SELECT id FROM products WHERE id = %s"
 
+
+def make_cache_key():
+    return request.url
+
+
+@cache.cached(timeout=60, key_prefix=make_cache_key)
 def get_data(product_id, page, offset):
-    cursor.execute(PRODUCT_QUERY, (product_id,))
+    cursor.execute(PRODUCT_VIEWS_QUERY, (product_id,))
     product_reviews = cursor.fetchall()
     if product_reviews:
         product = dict(zip(('id', 'product_title', 'asin'), product_reviews[0]))
@@ -61,12 +69,17 @@ def create_links(count_reviews, page, offset):
     return response
 
 
-def make_cache_key():
-    return request.url
+@app.route('/marakas/api/v1.0/products/', methods=['GET'])
+def get_products():
+    cursor.execute(PRODUCTS_QUERY)
+    products = cursor.fetchall()
+    response = []
+    for product_id, title, asin in products:
+        response.append({'id': product_id, 'title': title, 'asin': asin})
+    return jsonify({'products': response})
 
 
 @app.route('/marakas/api/v1.0/products/<int:product_id>', methods=['GET'])
-@cache.cached(timeout=60, key_prefix=make_cache_key)
 def index(product_id):
     page = request.args.get('page', default=1, type=int)
     offset = request.args.get('offset', default=1, type=int)
@@ -76,20 +89,28 @@ def index(product_id):
     return jsonify({'error': 'Not found'}), 404
 
 
-@app.route('/marakas/api/v1.0/products', methods=['PUT'])
-def create_review():
+@app.route('/marakas/api/v1.0/products/<int:product_id>', methods=['PUT'])
+def create_review(product_id):
+    if not validate_product(product_id):
+        return jsonify({'error': 'no product with this id'}), 400
     if not request.json or not validate_data(request.json):
         return jsonify({'error': 'bad request'}), 400
-    review = (request.json['id'],
+    review = (product_id,
               request.json['title'],
-              request.json.get('review'))
+              request.json['review'])
     cursor.execute(INSERT_REVIEW, review)
     connection.commit()
     return jsonify({'review': review}), 201
 
 
+def validate_product(product_id):
+    cursor.execute(GET_ID_PRODUCT, (product_id,))
+    product = cursor.fetchone()
+    return True if product else False
+
+
 def validate_data(data):
-    if data.get('id') and data.get('title') and data.get('review'):
+    if data.get('title') and data.get('review'):
         return True
     return False
 
