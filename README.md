@@ -25,7 +25,7 @@ To do this, use the utility parser.py
 Help for the parser:  `python parser.py --help`  
 Creating a database and importing products:
 
-`python parser.py -c -p products.csv`
+`python parser.py -p products.csv`
 
 Then we import the reviews:
 
