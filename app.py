@@ -45,7 +45,6 @@ def make_cache_key():
     return request.url
 
 
-@cache.cached(timeout=60, key_prefix=make_cache_key)
 def get_data(product_id, page, offset):
     product = Product.query.get(product_id)
     reviews_paginate = Review.query.filter_by(
@@ -78,6 +77,7 @@ def create_links(reviews):
 
 
 @app.route('/marakas/api/v1.0/products/', methods=['GET'])
+@cache.cached(timeout=60, key_prefix=make_cache_key)
 def get_products():
     products = Product.query.all()
     products_list = [product.as_dict() for product in products]
@@ -85,6 +85,7 @@ def get_products():
 
 
 @app.route('/marakas/api/v1.0/products/<int:product_id>', methods=['GET'])
+@cache.cached(timeout=60, key_prefix=make_cache_key)
 def index(product_id):
     page = request.args.get('page', default=1, type=int)
     offset = request.args.get('offset', default=1, type=int)
